@@ -2,29 +2,18 @@ import subprocess
 import datetime
 
 # Set the starting date for commits
-START_DATE = datetime.datetime(2024, 10, 10)  # Naive datetime
+START_DATE = datetime.datetime(2024, 10, 10)
 
 def auto_commit(commit_message=None, push=False):
     try:
-        # Step 1: Get the latest commit date
-        result = subprocess.run(
-            ['git', 'log', '--date=iso', '--pretty=format:%cd', '-n', '1'],
-            capture_output=True,
-            text=True
-        )
-        last_commit_date = result.stdout.strip()
-        
-        if not last_commit_date:
-            print("No commits found in the repository. Proceeding with initial commit.")
-            last_commit_datetime = None
-        else:
-            # Parse the last commit date to a naive datetime
-            last_commit_datetime = datetime.datetime.fromisoformat(last_commit_date).replace(tzinfo=None)
+        # Step 1: Check if there are changes to commit
+        result = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
+        changes = result.stdout.strip()
 
-        # Check if the last commit was before the specified start date
-        if last_commit_datetime is None or last_commit_datetime < START_DATE:
-            print(f"Last commit was before {START_DATE}. Starting commits from {START_DATE} onward.")
-        
+        if not changes:
+            print("No changes detected. Nothing to commit.")
+            return  # Exit the function if no changes are found
+
         # Step 2: Add all changes
         subprocess.run(['git', 'add', '--all'], check=True)
         print("Staged all changes.")
